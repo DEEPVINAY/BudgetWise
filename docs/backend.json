@@ -1,0 +1,160 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the BudgetWise application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "email"
+      ]
+    },
+    "Budget": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Budget",
+      "type": "object",
+      "description": "Represents a user's budget for a specific category.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the budget entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Budget)"
+        },
+        "category": {
+          "type": "string",
+          "description": "The category for the budget."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The budgeted amount for the category."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "category",
+        "amount"
+      ]
+    },
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
+      "type": "object",
+      "description": "Represents a spending category (e.g., Groceries, Transportation).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the category entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the spending category."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User.  If null, the category is a system default. (Relationship: User 1:N Category)"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "Transaction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Transaction",
+      "type": "object",
+      "description": "Represents a transaction record.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the transaction entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Transaction)"
+        },
+        "category": {
+          "type": "string",
+          "description": "Reference to Category."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the transaction."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date of the transaction.",
+          "format": "date-time"
+        },
+        "merchant": {
+          "type": "string",
+          "description": "A description of the transaction."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "income",
+            "expense"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "category",
+        "amount",
+        "date",
+        "merchant",
+        "type"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "google.com"
+    ]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/backend/entities/User"
+      },
+      "description": "Stores user profile information. Path-based ownership ensures only the authenticated user can access their own profile.",
+      "collections": {
+        "transactions": {
+          "/users/{userId}/transactions/{transactionId}": {
+            "schema": {
+              "$ref": "#/backend/entities/Transaction"
+            },
+            "description": "Stores transaction records for a specific user. Path-based ownership ensures only the authenticated user can access their transactions."
+          }
+        },
+        "budgets": {
+          "/users/{userId}/budgets/{budgetId}": {
+            "schema": {
+              "$ref": "#/backend/entities/Budget"
+            },
+            "description": "Stores budget information for a specific user. Path-based ownership ensures only the authenticated user can access their budgets."
+          }
+        }
+      }
+    }
+  }
+}
