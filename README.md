@@ -24,4 +24,7 @@ npm start
 Build for production:
 npm run build
 
+# BudgetWise application is hosted on a Google Cloud Compute Engine VM instance, providing secure, scalable, and reliable deployment infrastructure.
+
+
 
