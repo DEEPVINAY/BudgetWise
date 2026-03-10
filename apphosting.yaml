@@ -1,7 +1,42 @@
-# Settings to manage and configure a Firebase App Hosting backend.
-# https://firebase.google.com/docs/app-hosting/configure
-
+# Settings for Cloud Run service provisioning
 runConfig:
-  # Increase this value if you'd like to automatically spin up
-  # more instances in response to increased traffic.
-  maxInstances: 1
+  minInstances: 1 # Minimum number of container instances to keep alive (default 0).
+  maxInstances: 50 # Maximum number of container instances to run at a time (default 100).
+  concurrency: 80 # Maximum number of requests each serving instance can receive (default 80).
+  cpu: 1 # Number of CPUs used for each serving instance (default 0).
+  memoryMiB: 512 # Amount of memory allocated for each serving instance in MiB (default 512).
+
+# Environment variables for your application
+env:
+  - variable: STORAGE_BUCKET
+    value: mybucket.firebasestorage.app # Example value for a storage bucket.
+    availability:
+      - BUILD
+      - RUNTIME # Available during both build and runtime.
+  - variable: API_BASE_URL
+    value: https://api.example.com/v1
+    availability:
+      - RUNTIME # Only available during runtime.
+  - variable: NEXT_PUBLIC_ANALYTICS_ID
+    value: UA-123456789-1 # Example for Next.js public variable.
+
+# Secret parameters managed by Cloud Secret Manager
+  - variable: API_KEY
+    secret: myApiKeySecret # References a secret named 'myApiKeySecret' in Cloud Secret Manager.
+  - variable: DATABASE_PASSWORD
+    secret: projects/your-gcp-project-id/secrets/databasePassword/versions/latest # Long-form secret reference.
+  - variable: STRIPE_SECRET_KEY
+    secret: stripeSecretKey@3 # References a specific version of a secret.
+
+# Custom build and run scripts
+scripts:
+  buildCommand: npm run build:production # Overrides the default build command.
+  runCommand: node dist/server.js # Overrides the default run command to start your app.
+
+# Configure build output files
+outputFiles:
+  serverApp:
+    include:
+      - dist # Include the 'dist' directory.
+      - server.js # Include the 'server.js' file.
+      - package.json # Include package.json if needed for runtime.
