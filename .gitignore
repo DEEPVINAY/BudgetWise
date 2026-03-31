@@ -33,4 +33,5 @@ yarn-error.log*
 
 # firebase local files
 .firebase
-firebase-debug.log
+firebase-debug.logkey.json
+git add "src/app/(app)/settings/page.tsx" && git commit -m "Implement account deletion functionality" && git push origin main
