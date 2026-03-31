@@ -24,6 +24,11 @@ const PredictFutureSpendingOutputSchema = z.object({
 });
 export type PredictFutureSpendingOutput = z.infer<typeof PredictFutureSpendingOutputSchema>;
 
+/**
+ * Predicts future spending based on historical data using Genkit.
+ * @param input The historical spending data and prediction horizon.
+ * @returns A promise that resolves to the predicted spending, confidence level, and explanation.
+ */
 export async function predictFutureSpending(input: PredictFutureSpendingInput): Promise<PredictFutureSpendingOutput> {
   return predictFutureSpendingFlow(input);
 }
@@ -53,6 +58,9 @@ const predictFutureSpendingFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    if (!output) {
+      throw new Error('AI failed to generate a spending forecast.');
+    }
+    return output;
   }
 );
