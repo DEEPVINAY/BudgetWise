@@ -112,3 +112,4 @@ export const addUserProfile = (db: Firestore, user: User) => {
     errorEmitter.emit('permission-error', permissionError);
   });
 }
+

@@ -8,7 +8,7 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useUser } from '@/firebase';
+import { useUser, useAuth, useFirestore } from '@/firebase';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +24,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useTheme } from 'next-themes';
+import { deleteUser } from 'firebase/auth';
+import { doc, deleteDoc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
@@ -42,17 +46,47 @@ function ThemeSwitcher() {
 
 export default function SettingsPage() {
   const { user } = useUser();
+  const auth = useAuth();
+  const firestore = useFirestore();
   const { toast } = useToast();
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDeleteAccount = () => {
-    // In a real app, you would add logic to delete the user account from Firebase Auth
-    // and also delete their data from Firestore.
-    toast({
-      title: 'Account Deletion',
-      description:
-        'Account deletion functionality is not implemented in this demo.',
-      variant: 'destructive',
-    });
+  const handleDeleteAccount = async () => {
+    if (!user || !auth || !firestore) {
+      toast({
+        title: 'Error',
+        description: 'User data or services not available.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      // Delete user document from Firestore
+      await deleteDoc(doc(firestore, 'users', user.uid));
+      
+      // Delete user from Firebase Auth
+      await deleteUser(auth.currentUser!);
+      
+      toast({
+        title: 'Account Deleted',
+        description: 'Your account and all associated data have been deleted.',
+      });
+      
+      // Redirect to login page
+      router.push('/login');
+    } catch (error: any) {
+      console.error('Account deletion error:', error);
+      toast({
+        title: 'Deletion Failed',
+        description: error.message || 'Failed to delete account. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -108,8 +142,8 @@ export default function SettingsPage() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteAccount}>
-                  Continue
+                <AlertDialogAction onClick={handleDeleteAccount} disabled={isDeleting}>
+                  {isDeleting ? 'Deleting...' : 'Continue'}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
